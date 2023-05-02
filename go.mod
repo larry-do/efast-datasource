@@ -4,8 +4,8 @@ go 1.20
 
 require (
 	github.com/jinzhu/gorm v1.9.16
-	github.com/joho/godotenv v1.5.1
 	github.com/rs/zerolog v1.29.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
