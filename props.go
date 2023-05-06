@@ -7,4 +7,5 @@ type SourceProfile struct {
 	Dbname   string
 	Password string
 	Dialect  string
+	PrintLog bool
 }
