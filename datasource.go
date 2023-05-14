@@ -16,23 +16,27 @@ const (
 	DefaultDatasourceName = "DEFAULT"
 )
 
+const (
+	DialectPostgres = "postgres"
+)
+
 var (
 	datasources = make(map[string]*gorm.DB)
 )
 
 func InitDatasources(filepath string) {
-
+	var loggingWriter = initLogger()
 	var sourceProfiles = loadDatasource(filepath)
 	for sourceName, profile := range sourceProfiles {
 		var datasource *gorm.DB
 		var err error
 		switch profile.Dialect {
-		case "postgres":
+		case DialectPostgres:
 			datasource, err = gorm.Open(postgres.New(postgres.Config{DSN: fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=disable",
 				profile.Host, profile.Port, profile.Dbname,
 				profile.User, profile.Password,
 			)}), &gorm.Config{
-				Logger: initLogger(nil),
+				Logger: loggingWriter,
 			})
 		default:
 			log.Fatal().Err(err).Msgf("Not support dialect %s.", profile.Dialect)
@@ -50,12 +54,13 @@ func InitDatasources(filepath string) {
 	}
 }
 
-func initLogger(writer logger.Writer) logger.Interface {
-	if writer == nil {
-		writer = golog.New(os.Stdout, "\r\n", golog.LstdFlags)
+func initLogger() logger.Interface {
+	if loggingWriter == nil {
+		log.Info().Msg("No external logging writer provided. Use std Go log")
+		loggingWriter = golog.New(os.Stdout, "\r", golog.LstdFlags|golog.Lshortfile|golog.Lmicroseconds)
 	}
 	return logger.New(
-		writer,
+		loggingWriter,
 		logger.Config{
 			SlowThreshold:             time.Second,
 			LogLevel:                  logger.Info,
