@@ -2,10 +2,14 @@ package godatasource
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	golog "log"
 	"os"
+	"time"
 )
 
 const (
@@ -17,17 +21,26 @@ var (
 )
 
 func InitDatasources(filepath string) {
+
 	var sourceProfiles = loadDatasource(filepath)
 	for sourceName, profile := range sourceProfiles {
-		datasource, err := gorm.Open(profile.Dialect, fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=disable",
-			profile.Host, profile.Port, profile.Dbname,
-			profile.User, profile.Password,
-		))
+		var datasource *gorm.DB
+		var err error
+		switch profile.Dialect {
+		case "postgres":
+			datasource, err = gorm.Open(postgres.New(postgres.Config{DSN: fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=disable",
+				profile.Host, profile.Port, profile.Dbname,
+				profile.User, profile.Password,
+			)}), &gorm.Config{
+				Logger: initLogger(nil),
+			})
+		default:
+			log.Fatal().Err(err).Msgf("Not support dialect %s.", profile.Dialect)
+		}
+
 		if err != nil {
 			log.Fatal().Err(err).Msgf("Got error when opening connection to datasource %s.", sourceName)
 		}
-
-		datasource.LogMode(profile.PrintLog)
 
 		datasources[sourceName] = datasource
 
@@ -35,6 +48,22 @@ func InitDatasources(filepath string) {
 			Str("gorm_dialect", profile.Dialect).
 			Msg("Database connection created.")
 	}
+}
+
+func initLogger(writer logger.Writer) logger.Interface {
+	if writer == nil {
+		writer = golog.New(os.Stdout, "\r\n", golog.LstdFlags)
+	}
+	return logger.New(
+		writer,
+		logger.Config{
+			SlowThreshold:             time.Second,
+			LogLevel:                  logger.Info,
+			IgnoreRecordNotFoundError: false,
+			ParameterizedQueries:      true,
+			Colorful:                  false,
+		},
+	)
 }
 
 func loadDatasource(filepath string) map[string]SourceProfile {
