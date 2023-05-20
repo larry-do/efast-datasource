@@ -39,18 +39,18 @@ func InitDatasources(filepath string) {
 				Logger: loggingWriter,
 			})
 		default:
-			log.Fatal().Err(err).Msgf("Not support dialect %s.", profile.Dialect)
+			log.Fatal().Err(err).Msgf("Not support dialect %s", profile.Dialect)
 		}
 
 		if err != nil {
-			log.Fatal().Err(err).Msgf("Got error when opening connection to datasource %s.", sourceName)
+			log.Fatal().Err(err).Msgf("Got error when opening connection to datasource %s", sourceName)
 		}
 
 		datasources[sourceName] = datasource
 
 		log.Info().Str("datasource", sourceName).
 			Str("gorm_dialect", profile.Dialect).
-			Msg("Database connection created.")
+			Msg("Database connection created")
 	}
 }
 
@@ -72,16 +72,16 @@ func initLogger() logger.Interface {
 }
 
 func loadDatasource(filepath string) map[string]SourceProfile {
-	log.Info().Msgf("Read datasource profiles from %s.", filepath)
+	log.Info().Msgf("Reading datasource profiles...")
 	data, err := os.ReadFile(filepath)
 	if err != nil {
-		log.Fatal().Err(err).Msgf("Error loading file %s.", filepath)
+		log.Fatal().Err(err).Msgf("Error loading datasource profiles file")
 	}
 
 	var config map[string]interface{}
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
-		log.Fatal().Err(err).Msgf("Error parsing file %s.", filepath)
+		log.Fatal().Err(err).Msgf("Error parsing datasource profiles file")
 	}
 
 	sourceProfiles := make(map[string]SourceProfile)
