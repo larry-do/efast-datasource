@@ -1,11 +1,14 @@
 package common_dao
 
-import "godatasource"
+import (
+	"godatasource"
+	"gorm.io/gorm"
+)
 
-func Save(object any) {
-	godatasource.DefaultConnection().Create(object)
+func Save(object any) (tx *gorm.DB) {
+	return godatasource.DefaultConnection().Create(object)
 }
 
-func Update(object any) {
-	godatasource.DefaultConnection().Save(object)
+func Update(object any) (tx *gorm.DB) {
+	return godatasource.DefaultConnection().Save(object)
 }
