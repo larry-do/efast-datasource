@@ -107,7 +107,11 @@ func loadDatasource(filepath string) map[string]SourceProfile {
 }
 
 func Connection(sourceName string) *gorm.DB {
-	return datasources[sourceName]
+	if datasource, ok := datasources[sourceName]; ok {
+		return datasource
+	}
+	log.Error().Msgf("Not found connection of datasource %s", sourceName)
+	return nil
 }
 
 func DefaultConnection() *gorm.DB {

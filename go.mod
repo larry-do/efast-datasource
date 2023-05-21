@@ -1,4 +1,4 @@
-module efast-datasource
+module godatasource
 
 go 1.20
 
