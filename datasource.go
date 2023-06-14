@@ -27,19 +27,19 @@ var (
 func InitDatasources(filepath string) {
 	var loggingWriter = initLogger()
 	var sourceProfiles = loadDatasource(filepath)
-	for sourceName, profile := range sourceProfiles {
+	for sourceName, profile := range sourceProfiles.Profiles {
 		var datasource *gorm.DB
 		var err error
-		switch profile.Dialect {
+		switch profile.Gorm.Dialect {
 		case DialectPostgres:
 			datasource, err = gorm.Open(postgres.New(postgres.Config{DSN: fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=disable",
-				profile.Host, profile.Port, profile.Dbname,
-				profile.User, profile.Password,
+				profile.Datasource.Host, profile.Datasource.Port, profile.Datasource.Dbname,
+				profile.Datasource.User, profile.Datasource.Password,
 			)}), &gorm.Config{
 				Logger: loggingWriter,
 			})
 		default:
-			log.Fatal().Err(err).Msgf("Not support dialect %s", profile.Dialect)
+			log.Fatal().Err(err).Msgf("Not support dialect %s", profile.Gorm.Dialect)
 		}
 
 		if err != nil {
@@ -49,7 +49,7 @@ func InitDatasources(filepath string) {
 		datasources[sourceName] = datasource
 
 		log.Info().Str("datasource", sourceName).
-			Str("gorm_dialect", profile.Dialect).
+			Str("gorm_dialect", profile.Gorm.Dialect).
 			Msg("Database connection created")
 	}
 }
@@ -71,39 +71,20 @@ func initLogger() logger.Interface {
 	)
 }
 
-func loadDatasource(filepath string) map[string]SourceProfile {
+func loadDatasource(filepath string) DataSourceConfig {
 	log.Info().Msgf("Reading datasource profiles...")
 	data, err := os.ReadFile(filepath)
 	if err != nil {
 		log.Fatal().Err(err).Msgf("Error loading datasource profiles file")
 	}
 
-	var config map[string]interface{}
+	var config DataSourceConfig
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		log.Fatal().Err(err).Msgf("Error parsing datasource profiles file")
 	}
 
-	sourceProfiles := make(map[string]SourceProfile)
-
-	for sourceName, profile := range config["profiles"].(map[string]interface{}) {
-		connectionProfile := profile.(map[string]interface{})["datasource"]
-		gormConfig := profile.(map[string]interface{})["gorm"]
-
-		var sourceProfile = SourceProfile{
-			Host:     connectionProfile.(map[string]interface{})["host"].(string),
-			Port:     connectionProfile.(map[string]interface{})["port"].(int),
-			User:     connectionProfile.(map[string]interface{})["user"].(string),
-			Dbname:   connectionProfile.(map[string]interface{})["dbname"].(string),
-			Password: connectionProfile.(map[string]interface{})["password"].(string),
-			Dialect:  gormConfig.(map[string]interface{})["dialect"].(string),
-			PrintLog: gormConfig.(map[string]interface{})["print_log"].(bool),
-		}
-
-		sourceProfiles[sourceName] = sourceProfile
-	}
-
-	return sourceProfiles
+	return config
 }
 
 func Connection(sourceName string) *gorm.DB {
