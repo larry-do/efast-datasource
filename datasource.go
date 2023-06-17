@@ -36,7 +36,8 @@ func InitDatasources(filepath string) {
 				profile.Datasource.Host, profile.Datasource.Port, profile.Datasource.Dbname,
 				profile.Datasource.User, profile.Datasource.Password,
 			)}), &gorm.Config{
-				Logger: loggingWriter,
+				Logger:                 loggingWriter,
+				SkipDefaultTransaction: profile.Gorm.SkipDefaultTransaction,
 			})
 		default:
 			log.Fatal().Err(err).Msgf("Not support dialect %s", profile.Gorm.Dialect)
