@@ -7,15 +7,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func ExecuteTransaction(f func() error) error {
+func ExecuteTransaction(f func(*gorm.DB) error) error {
 	return ExecuteTransactionWithDB(godatasource.DefaultConnection(), f)
 }
 
-func ExecuteTransactionWithDB(db *gorm.DB, f func() error) error {
+func ExecuteTransactionWithDB(db *gorm.DB, f func(*gorm.DB) error) error {
 	tx := db.Begin()
 	txId, _ := uuid.NewUUID()
 	log.Debug().Any("txId", txId).Msg("Start transaction")
-	err := f()
+	err := f(tx)
 	if err != nil {
 		tx.Rollback()
 		log.Warn().Any("txId", txId).Msg("Got error. Rollback transaction")
