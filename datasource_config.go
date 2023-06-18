@@ -20,5 +20,4 @@ type Datasource struct {
 type GormProps struct {
 	Dialect                string `yaml:"dialect"`
 	PrintLog               bool   `yaml:"print_log"`
-	SkipDefaultTransaction bool   `yaml:"skip_default_transaction"`
 }

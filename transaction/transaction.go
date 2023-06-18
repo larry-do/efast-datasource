@@ -12,7 +12,7 @@ func ExecuteTransaction(f func(*gorm.DB) error) error {
 }
 
 func ExecuteTransactionWithDB(db *gorm.DB, f func(*gorm.DB) error) error {
-	tx := db.Begin()
+	tx := db.Session(&gorm.Session{SkipDefaultTransaction: true})
 	txId, _ := uuid.NewUUID()
 	log.Debug().Any("txId", txId).Msg("Start transaction")
 	err := f(tx)
