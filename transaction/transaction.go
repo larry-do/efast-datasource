@@ -7,11 +7,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func ExecuteTransaction(f func(*gorm.DB) error) error {
-	return ExecuteTransactionWithDB(godatasource.DefaultConnection(), f)
+func ExecuteInTransaction(f func(*gorm.DB) error) error {
+	return ExecuteInTransactionWithDB(godatasource.DefaultConnection(), f)
 }
 
-func ExecuteTransactionWithDB(db *gorm.DB, f func(*gorm.DB) error) error {
+func ExecuteInTransactionWithDB(db *gorm.DB, f func(*gorm.DB) error) error {
 	tx := db.Session(&gorm.Session{SkipDefaultTransaction: true})
 	txId, _ := uuid.NewUUID()
 	log.Debug().Any("txId", txId).Msg("Start transaction")
